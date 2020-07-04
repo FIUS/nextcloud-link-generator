@@ -16,4 +16,5 @@ if len(sys.argv) > 0:
     for exam in exams:
         table.append([exam, exams[exam][0], "{:.2f}".format(exams[exam][1])])
     header = ["Exam", "Link", "Score"]
+    table = sorted(table, key=lambda x: x[2], reverse=True)
     print(tabulate(table,headers=header))
