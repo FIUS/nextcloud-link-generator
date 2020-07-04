@@ -1,0 +1,4 @@
+user = 'username'
+password = 'pw'
+url='url'
+base_dir='dir'
