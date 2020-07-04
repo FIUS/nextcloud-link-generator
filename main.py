@@ -5,7 +5,7 @@ from tabulate import tabulate
 import getpass
 
 if config.password is None:
-    config.password=getpass.getpass()
+    config.password = getpass.getpass()
 
 
 nc = Nextcloud(config.url,
@@ -17,4 +17,4 @@ if len(sys.argv) > 0:
         table.append([exam, exams[exam][0], "{:.2f}".format(exams[exam][1])])
     header = ["Exam", "Link", "Score"]
     table = sorted(table, key=lambda x: x[2], reverse=True)
-    print(tabulate(table,headers=header))
+    print(tabulate(table, headers=header))

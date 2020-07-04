@@ -12,7 +12,7 @@ class Nextcloud:
         self.oc.login(username, password)
         self.remote_directory=remote_directory
 
-    def get_links(self,lectures,link_expire_in_days=7,accuracy=7):
+    def get_links(self,lectures,link_expire_in_days=7,accuracy=8):
         next_week = datetime.datetime.now()+datetime.timedelta(days=link_expire_in_days)
         next_week_string = str(next_week.year)+"-" + str(next_week.month)+"-"+str(next_week.day)
         print("Getting exams from server...")
