@@ -10,3 +10,4 @@ Run ```python3 main.py <exam1> <exam2> <exam n>``` with the exams you want as co
   - https://github.com/owncloud/pyocclient at release 0.4
   - python-Levenshtein
   - tabulate
+  - clipboard
