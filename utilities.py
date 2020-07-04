@@ -12,8 +12,8 @@ class Nextcloud:
         self.oc.login(username, password)
         self.remote_directory=remote_directory
 
-    def get_links(self,lectures):
-        next_week = datetime.datetime.now()+datetime.timedelta(days=7)
+    def get_links(self,lectures,link_expire_in_days=7):
+        next_week = datetime.datetime.now()+datetime.timedelta(days=link_expire_in_days)
         next_week_string = str(next_week.year)+"-" + str(next_week.month)+"-"+str(next_week.day)
 
         files = self.oc.list(self.remote_directory)
