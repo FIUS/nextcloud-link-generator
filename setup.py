@@ -1,7 +1,6 @@
 import os
 import getpass
 
-os.system("pip3 install pyclient")
 os.system("pip3 install python-Levenshtein")
 os.system("pip3 install tabulate")
 
