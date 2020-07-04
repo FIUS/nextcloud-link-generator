@@ -19,23 +19,25 @@ username = tryAgain("Enter your Nextcloud username:\n")
 password = getpass.getpass(prompt="Enter your Nextcloud password:\n")
 
 with open("config.py", 'w') as outfile:
-    outfile.write("user=")
+    outfile.write("user='")
     outfile.write(username)
-    outfile.write("\n")
+    outfile.write("'\n")
 
     outfile.write("password=")
     if password=="":
         outfile.write("None")
     else:
+        outfile.write("'")
         outfile.write(password)
+        outfile.write("'")
     outfile.write("\n")
 
-    outfile.write("url=")
+    outfile.write("url='")
     outfile.write(url)
-    outfile.write("\n")
+    outfile.write("'\n")
 
-    outfile.write("base_dir=")
+    outfile.write("base_dir='")
     outfile.write(base_dir)
-    outfile.write("\n")
+    outfile.write("'\n")
 
 
