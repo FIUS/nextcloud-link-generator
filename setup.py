@@ -3,6 +3,7 @@ import getpass
 
 os.system("pip3 install python-Levenshtein")
 os.system("pip3 install tabulate")
+os.system("pip3 install clipboard")
 
 def tryAgain(output):
     again = True

@@ -4,6 +4,7 @@ import pyocclient.owncloud.owncloud as owncloud
 import Levenshtein as stein
 import datetime
 import math
+import clipboard
 
 
 class Nextcloud:
@@ -42,3 +43,8 @@ class Nextcloud:
                             link_info.get_link(), 1/float(math.sqrt(distance)))
         print()
         return output
+
+class Helper:
+    @staticmethod
+    def toClipboard(text):
+        clipboard.copy(text)
