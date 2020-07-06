@@ -37,12 +37,15 @@ class Nextcloud:
                     distance = stein.distance(
                         modified_lecture, modified_lecture_name_server)
                     if distance < accuracy or modified_lecture.lower() in modified_lecture_name_server.lower():
+                        if distance <= 0:
+                            distance = 1
                         link_info = self.oc.share_file_with_link(
                             f.path, expire_date=next_week_string)
                         output[lecture_name_server] = (
                             link_info.get_link(), 1/float(math.sqrt(distance)))
         print()
         return output
+
 
 class Helper:
     @staticmethod
