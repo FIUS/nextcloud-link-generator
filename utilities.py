@@ -89,7 +89,7 @@ class Nextcloud:
         next_week_string = str(next_week.year)+"-" + \
             str(next_week.month)+"-"+str(next_week.day)
         print("Getting exams from server...")
-        files = self.get_filenames_with_path() #self.oc.list(self.remote_directory)
+        files = self.oc.list(self.remote_directory)
         print("Done...")
         output = {}
         for lecture in lectures:
