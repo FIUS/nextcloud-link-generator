@@ -2,3 +2,4 @@ config.py
 __pycache__/
 Pipfile.lock
 .mypy_cache
+cache.json

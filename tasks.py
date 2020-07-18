@@ -7,9 +7,16 @@ from time import sleep, time
 import webbrowser
 
 
-@task
+@task(help={
+    'host': 'The url of the nextcloud server.',
+    'base-dir': 'The path to search for directories in the nextcloud server. (Can be changed later in config.py)',
+})
 def login(c, host, base_dir='/'):
-    '''Login with the login flow v2 of nextcloud to get an app password.'''
+    '''Login with the login flow v2 of nextcloud to get an app password.
+
+    This will open a browser tab for you to login to.
+    The app password will be written in config.py.
+    '''
     url = urlparse(host)
     if (url.scheme is not None) and (url.scheme != 'https'):
         print('The connection to {} does not use the secure https protocol. Aborting login.'.format(url))
@@ -69,31 +76,45 @@ def login(c, host, base_dir='/'):
         outfile.write("base_dir = '{}'\n\n".format(base_dir))
 
 
-@task
-def list_files(c):
+@task(help={
+    'no-cache': 'Bypass the cache and load everything from the server.',
+})
+def list_files(c, no_cache=False):
+    '''List all directories in the basedir.'''
     import config
     from utilities import Nextcloud
     nc = Nextcloud(config.url, config.user, config.password, config.base_dir)
-    for f in nc.get_filenames_with_path():
+    for f in nc.get_filenames_with_path(no_cache=no_cache):
         print(f['filename'], f['path'])
 
 
-@task(help={'lectures': 'A list of lecture names to search for. Seperate lectures with ",".'})
-def search(c, lectures, exact=False):
+@task(help={
+    'lectures': 'A list of lecture names to search for. Seperate lectures with ",".',
+    'exact': 'Only include exact substring matches (still ignores character case).',
+    'no-cache': 'Bypass the cache and load everything from the server.',
+})
+def search(c, lectures, exact=False, no_cache=False):
+    '''Search for directories in the basedir.'''
     import config
     from utilities import Nextcloud
     nc = Nextcloud(config.url, config.user, config.password, config.base_dir)
-    for f in nc.get_files_for_lectures(lectures.split(','), exact_matches=exact):
-        print(f['searchableFilename'], f['filename'], f['path'])
+    for f in nc.get_files_for_lectures(lectures.split(','), exact_matches=exact, no_cache=no_cache):
+        print(f['searchableFilename'], f['filename'], f['path'], sep='\t')
 
-@task(help={'lectures': 'A list of lecture names to search for. Seperate lectures with ",".', 'zexpiry': 'Nr. of days until links expire.'})
-def links(c, lectures, exact=False, expiry=7):
+@task(help={
+    'lectures': 'A list of lecture names to search for. Seperate lectures with ",".',
+    'expiry': 'Nr. of days until links expire.',
+    'exact': 'Only include exact substring matches (still ignores character case).',
+    'no-cache': 'Bypass the cache and load everything from the server.',
+})
+def links(c, lectures, exact=False, no_cache=False, expiry=7):
+    '''Generate share links for directories in the basedir.'''
     import config
     from utilities import Helper
     from tabulate import tabulate
     from utilities import Nextcloud
     nc = Nextcloud(config.url, config.user, config.password, config.base_dir)
-    files = nc.get_files_for_lectures(lectures.split(','), exact_matches=exact)
+    files = nc.get_files_for_lectures(lectures.split(','), exact_matches=exact, no_cache=no_cache)
     links = nc.get_links_for_files(files, link_expire_in_days=expiry)
     clipboard = ''
     table_content = []
