@@ -14,18 +14,24 @@ class Nextcloud:
         self.oc = owncloud.Client(domain)
         self.oc.login(username, password)
         self.remote_directory = remote_directory
+        print("Filling cache...")
         self.file_cache = (datetime.datetime.now(),
                            self.oc.list(self.remote_directory))
+        print("Cache Done!")
 
     def get_links(self, lectures, link_expire_in_days=7, accuracy=8):
         next_week = datetime.datetime.now()+datetime.timedelta(days=link_expire_in_days)
         next_week_string = str(next_week.year)+"-" + \
             str(next_week.month)+"-"+str(next_week.day)
         print("Getting exams from server...")
-
-        if (datetime.datetime.now()-self.file_cache[0]).min > 30:
+        cache_time=datetime.datetime.now()-self.file_cache[0])
+        print("Cache lifetime:",cache_time)
+        if (cache_time.min > 30:
+            print("not using cache")
             self.file_cache = (datetime.datetime.now(),
                                self.oc.list(self.remote_directory))
+        else:
+            print("using cache")
 
         files = self.file_cache[1]
 
