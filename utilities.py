@@ -24,7 +24,7 @@ class Nextcloud:
         next_week_string = str(next_week.year)+"-" + \
             str(next_week.month)+"-"+str(next_week.day)
         print("Getting exams from server...")
-        cache_time=datetime.datetime.now()-self.file_cache[0])
+        cache_time=datetime.datetime.now()-self.file_cache[0]
         print("Cache lifetime:",cache_time)
         if (cache_time.min > 30:
             print("not using cache")
