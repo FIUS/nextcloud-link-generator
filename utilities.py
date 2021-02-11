@@ -26,7 +26,7 @@ class Nextcloud:
         print("Getting exams from server...")
         cache_time=datetime.datetime.now()-self.file_cache[0]
         print("Cache lifetime:",cache_time)
-        if (cache_time.min > 30:
+        if cache_time.min > 30:
             print("not using cache")
             self.file_cache = (datetime.datetime.now(),
                                self.oc.list(self.remote_directory))
