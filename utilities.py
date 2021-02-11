@@ -1,10 +1,11 @@
 import sys
 from pathlib import Path
-import pyocclient.owncloud.owncloud as owncloud
+import nclink.pyocclient.owncloud.owncloud as owncloud
 import Levenshtein as stein
 import datetime
 import math
 import clipboard
+import datetime
 
 
 class Nextcloud:
@@ -13,13 +14,21 @@ class Nextcloud:
         self.oc = owncloud.Client(domain)
         self.oc.login(username, password)
         self.remote_directory = remote_directory
+        self.file_cache = (datetime.datetime.now(),
+                           self.oc.list(self.remote_directory))
 
     def get_links(self, lectures, link_expire_in_days=7, accuracy=8):
         next_week = datetime.datetime.now()+datetime.timedelta(days=link_expire_in_days)
         next_week_string = str(next_week.year)+"-" + \
             str(next_week.month)+"-"+str(next_week.day)
         print("Getting exams from server...")
-        files = self.oc.list(self.remote_directory)
+
+        if (datetime.datetime.now()-self.file_cache[0]).min > 30:
+            self.file_cache = (datetime.datetime.now(),
+                               self.oc.list(self.remote_directory))
+
+        files = self.file_cache[1]
+
         print("Done...")
         output = {}
         for lecture in lectures:
