@@ -17,16 +17,17 @@ class Nextcloud:
         print("Filling cache...")
         self.file_cache = (datetime.datetime.now(),
                            self.oc.list(self.remote_directory))
+        self.link_cache={}
         print("Cache Done!")
 
     def get_links(self, lectures, link_expire_in_days=7, accuracy=8):
         next_week = datetime.datetime.now()+datetime.timedelta(days=link_expire_in_days)
         next_week_string = str(next_week.year)+"-" + \
             str(next_week.month)+"-"+str(next_week.day)
-        print("Getting exams from server...")
         cache_time=datetime.datetime.now()-self.file_cache[0]
         print("Cache lifetime:",cache_time)
-        if cache_time.min > 30:
+        
+        if cache_time.total_seconds() > 60*60*24:
             print("not using cache")
             self.file_cache = (datetime.datetime.now(),
                                self.oc.list(self.remote_directory))
@@ -54,10 +55,15 @@ class Nextcloud:
                     if distance < accuracy or modified_lecture.lower() in modified_lecture_name_server.lower():
                         if distance <= 0:
                             distance = 1
-                        link_info = self.oc.share_file_with_link(
-                            f.path, expire_date=next_week_string)
-                        output[lecture_name_server] = (
-                            link_info.get_link(), 1/float(math.sqrt(distance)))
+                        if lecture_name_server in self.link_cache and (datetime.datetime.now()-self.link_cache[str(lecture_name_server)][0]).total_seconds()<60*60*24:
+                            output[lecture_name_server] =(self.link_cache[str(lecture_name_server)][1],1/float(math.sqrt(distance)))
+                            print("Using cached Link")
+                        else:
+                            print("Fetching link from server")
+                            link_info = self.oc.share_file_with_link(f.path, expire_date=next_week_string)
+                            print("Done fetching")
+                            self.link_cache[str(lecture_name_server)]=(datetime.datetime.now(),link_info.get_link())
+                            output[lecture_name_server] = (link_info.get_link(), 1/float(math.sqrt(distance)))
         print()
         return output
 
