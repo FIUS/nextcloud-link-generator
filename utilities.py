@@ -36,6 +36,9 @@ class Nextcloud:
 
         files = self.file_cache[1]
 
+        cache_counter=0
+        fetch_counter=0
+
         print("Done...")
         output = {}
         for lecture in lectures:
@@ -56,16 +59,20 @@ class Nextcloud:
                         if distance <= 0:
                             distance = 1
                         if lecture_name_server in self.link_cache and (datetime.datetime.now()-self.link_cache[str(lecture_name_server)][0]).total_seconds()<60*60*24:
-                            output[lecture_name_server] =(self.link_cache[str(lecture_name_server)][1],1/float(math.sqrt(distance)))
                             print("Using cached Link")
+                            cache_counter += 1
+                            output[lecture_name_server] =(self.link_cache[str(lecture_name_server)][1],1/float(math.sqrt(distance)))
+                            
                         else:
                             print("Fetching link from server")
+                            fetch_counter += 1
+
                             link_info = self.oc.share_file_with_link(f.path, expire_date=next_week_string)
                             print("Done fetching")
                             self.link_cache[str(lecture_name_server)]=(datetime.datetime.now(),link_info.get_link())
                             output[lecture_name_server] = (link_info.get_link(), 1/float(math.sqrt(distance)))
         print()
-        return output
+        return output,cache_counter,fetch_counter
 
 
 class Helper:
