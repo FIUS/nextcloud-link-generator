@@ -9,7 +9,7 @@ import datetime
 from nextcloud import NextCloud
 from nextcloud.base import ShareType,Permission, datetime_to_expire_date
 from urllib.parse import unquote
-import config
+import nclink.config as config
 
 class Nextcloud:
 
