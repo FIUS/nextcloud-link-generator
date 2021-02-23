@@ -37,6 +37,18 @@ class Nextcloud:
             link_permissions=link.data['permissions']
             updated_link=self.nc.update_share(link_id, expire_date=expire_date) 
             if updated_link.is_ok:
+                print(updated_link.data)
+                log_data=updated_link.data
+                
+                with open('links.log', 'a') as log_file:
+                    logput = str(datetime.datetime.now())+" -> "
+                    logput += " id: "+log_data['id']
+                    logput += " expiration: "+log_data['expiration']
+                    logput += " url: "+log_data['url']
+                    logput += "\n"
+                    
+                    log_file.write(logput)
+
                 return updated_link.data['url']
         return None
     
