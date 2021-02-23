@@ -78,7 +78,7 @@ class Nextcloud:
         if cache_callback is not None and recursion:
             if len(self.link_cache)==0 or (datetime.datetime.now()-self.link_cache[self.link_cache.keys()[0]][0]).total_seconds()>config.file_cache_time:
                 cache_callback("The cache has to be recreated, this may take a few minutes")
-                self.get_links([""],link_expire_in_days,accuracy,recursion=False)
+                self.get_links([""],link_expire_in_days,accuracy,cache_callback=cache_callback,recursion=False)
                 cache_callback("The cache has been recreated, your request is now processed!")
 
         files = self.file_cache[1]
@@ -90,6 +90,7 @@ class Nextcloud:
         output = {}
         for lecture in lectures:
             print("Searching for:", lecture)
+            counter=1
             for f in files:
                 
                 split_path = f.split("/")
@@ -117,6 +118,11 @@ class Nextcloud:
                         link_info = self.link_from_server(f,expire_days=link_expire_in_days)
                         print("Done fetching")
                         
+                        if not recursion:
+                            percentage="{:.2f}".format((counter/len(files))*100)+"%"
+                            cache_callback("Caching progress: "+percentage)
+                            counter+=1
+
                         self.link_cache[str(lecture_name_server)]=(datetime.datetime.now(),link_info)
                         output[lecture_name_server] = (link_info, 1/float(math.sqrt(distance)))
         
