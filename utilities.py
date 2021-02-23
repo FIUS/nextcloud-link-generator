@@ -76,9 +76,9 @@ class Nextcloud:
             print("using cache")
         
         if cache_callback is not None and recursion:
-            if len(self.file_cache)==0 or (datetime.datetime.now()-self.file_cache[self.file_cache.keys()[0]][0]).total_seconds()>config.file_cache_time:
+            if len(self.link_cache)==0 or (datetime.datetime.now()-self.link_cache[self.link_cache.keys()[0]][0]).total_seconds()>config.file_cache_time:
                 cache_callback("The cache has to be recreated, this may take a few minutes")
-                self.get_links([""],link_expire_in_days,accuracy,False)
+                self.get_links([""],link_expire_in_days,accuracy,recursion=False)
                 cache_callback("The cache has been recreated, your request is now processed!")
 
         files = self.file_cache[1]
