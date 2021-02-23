@@ -19,7 +19,6 @@ class Nextcloud:
         
         self.username=username
         self.remote_directory=remote_directory
-        
         self.nc=NextCloud(domain,username,password,json_output=True)
         
         self.remote_directory = remote_directory
@@ -64,7 +63,7 @@ class Nextcloud:
             output_list.append(output_string)
         return output_list[1:]
 
-    def get_links(self, lectures, link_expire_in_days=7, accuracy=8):
+    def get_links(self, lectures, link_expire_in_days=7, accuracy=8, cache_callback=None, recursion=True):
 
         cache_time=datetime.datetime.now()-self.file_cache[0]
         print("Cache lifetime:",cache_time)
@@ -76,6 +75,12 @@ class Nextcloud:
         else:
             print("using cache")
         
+        if cache_callback is not None and recursion:
+            if len(self.file_cache)==0 or (datetime.datetime.now()-self.file_cache[self.file_cache.keys()[0]][0]).total_seconds()>config.file_cache_time:
+                cache_callback("The cache has to be recreated, this may take a few minutes")
+                self.get_links([""],link_expire_in_days,accuracy,False)
+                cache_callback("The cache has been recreated, your request is now processed!")
+
         files = self.file_cache[1]
 
         cache_counter=0
