@@ -22,8 +22,7 @@ class Nextcloud:
 
     def get_links(self, lectures, link_expire_in_days=7, accuracy=8):
         next_week = datetime.datetime.now()+datetime.timedelta(days=link_expire_in_days)
-        next_week_string = str(next_week.year)+"-" + \
-            str(next_week.month)+"-"+str(next_week.day)
+        next_week_string = next_week.strftime('%Y-%m-%d')
         cache_time=datetime.datetime.now()-self.file_cache[0]
         print("Cache lifetime:",cache_time)
         
