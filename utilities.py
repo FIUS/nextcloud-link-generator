@@ -6,33 +6,64 @@ import datetime
 import math
 import clipboard
 import datetime
-from nclink.ncapi.src.nextcloud import NextCloud
+from nextcloud import NextCloud
+from nextcloud.base import ShareType,Permission, datetime_to_expire_date
+from urllib.parse import unquote
 
 class Nextcloud:
 
     def __init__(self, domain, username, password, remote_directory):
-        self.oc = owncloud.Client(domain)
-        self.oc.login(username, password)
+        #self.oc = owncloud.Client(domain)
+        #self.oc.login(username, password)
+        
+        self.username=username
+        self.remote_directory=remote_directory
+        
+        self.nc=NextCloud(domain,username,password,json_output=True)
+        
         self.remote_directory = remote_directory
         print("Filling cache...")
         self.file_cache = (datetime.datetime.now(),
-                           self.oc.list(self.remote_directory))
+                           self.get_dirs())
         self.link_cache={}
+        
         print("Cache Done!")
 
+    def link_from_server(self,folder,expire_days=7):
+        expire_date = datetime_to_expire_date(datetime.datetime.now() + datetime.timedelta(days=expire_days))
+        link=self.nc.create_share(folder, share_type=ShareType.PUBLIC_LINK.value)
+        if link.is_ok:
+            link_id=link.data['id']
+            link_permissions=link.data['permissions']
+            updated_link=self.nc.update_share(link_id, expire_date=expire_date) 
+            if updated_link.is_ok:
+                return updated_link.data['url']
+        return None
+    
+    def get_dirs(self):
+        raw=self.nc.list_folders(self.username,path=self.remote_directory).data
+        output_list=[]
+        for dir in raw:
+            strings=unquote(dir['href']).split("/")[5:-1]
+            output_string=""
+            for s in strings:
+                output_string+="/"+s
+            output_string+="/"
+            output_list.append(output_string)
+        return output_list[1:]
+
     def get_links(self, lectures, link_expire_in_days=7, accuracy=8):
-        next_week = datetime.datetime.now()+datetime.timedelta(days=link_expire_in_days)
-        next_week_string = next_week.strftime('%Y-%m-%d')
+
         cache_time=datetime.datetime.now()-self.file_cache[0]
         print("Cache lifetime:",cache_time)
         
         if cache_time.total_seconds() > 60*60*24:
             print("not using cache")
             self.file_cache = (datetime.datetime.now(),
-                               self.oc.list(self.remote_directory))
+                               self.get_dirs())
         else:
             print("using cache")
-
+        
         files = self.file_cache[1]
 
         cache_counter=0
@@ -43,34 +74,35 @@ class Nextcloud:
         for lecture in lectures:
             print("Searching for:", lecture)
             for f in files:
-                if f.file_type == "dir":
-                    split_path = f.path.split("/")
+                
+                split_path = f.split("/")
 
-                    lecture_name_server = split_path[-2]
+                lecture_name_server = split_path[-2]
 
-                    modified_lecture_name_server = lecture_name_server.replace(
-                        "-", "")
-                    modified_lecture = lecture.replace("-", "")
+                modified_lecture_name_server = lecture_name_server.replace(
+                    "-", "")
+                modified_lecture = lecture.replace("-", "")
 
-                    distance = stein.distance(
-                        modified_lecture, modified_lecture_name_server)
-                    if distance < accuracy or modified_lecture.lower() in modified_lecture_name_server.lower():
-                        if distance <= 0:
-                            distance = 1
-                        if lecture_name_server in self.link_cache and (datetime.datetime.now()-self.link_cache[str(lecture_name_server)][0]).total_seconds()<60*60*24:
-                            print("Using cached Link")
-                            cache_counter += 1
-                            output[lecture_name_server] =(self.link_cache[str(lecture_name_server)][1],1/float(math.sqrt(distance)))
-                            
-                        else:
-                            print("Fetching link from server")
-                            fetch_counter += 1
-
-                            link_info = self.oc.share_file_with_link(f.path, expire_date=next_week_string)
-                            print("Done fetching")
-                            self.link_cache[str(lecture_name_server)]=(datetime.datetime.now(),link_info.get_link())
-                            output[lecture_name_server] = (link_info.get_link(), 1/float(math.sqrt(distance)))
-        print()
+                distance = stein.distance(
+                    modified_lecture, modified_lecture_name_server)
+                if distance < accuracy or modified_lecture.lower() in modified_lecture_name_server.lower():
+                    if distance <= 0:
+                        distance = 1
+                    if lecture_name_server in self.link_cache and (datetime.datetime.now()-self.link_cache[str(lecture_name_server)][0]).total_seconds()<60*60*24:
+                        print("Using cached Link")
+                        cache_counter += 1
+                        output[lecture_name_server] =(self.link_cache[str(lecture_name_server)][1],1/float(math.sqrt(distance)))
+                        
+                    else:
+                        print("Fetching link from server")
+                        fetch_counter += 1
+                        
+                        link_info = self.link_from_server(f,expire_days=link_expire_in_days)
+                        print("Done fetching")
+                        
+                        self.link_cache[str(lecture_name_server)]=(datetime.datetime.now(),link_info)
+                        output[lecture_name_server] = (link_info, 1/float(math.sqrt(distance)))
+        
         return output,cache_counter,fetch_counter
 
 
