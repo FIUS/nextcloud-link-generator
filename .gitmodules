@@ -1,0 +1,3 @@
+[submodule "ncapi"]
+	path = ncapi
+	url = git@github.com:matejak/nextcloud-API.git

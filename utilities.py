@@ -6,7 +6,7 @@ import datetime
 import math
 import clipboard
 import datetime
-
+from nclink.ncapi.src.nextcloud import NextCloud
 
 class Nextcloud:
 
