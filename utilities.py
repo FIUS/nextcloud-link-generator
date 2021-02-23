@@ -9,6 +9,7 @@ import datetime
 from nextcloud import NextCloud
 from nextcloud.base import ShareType,Permission, datetime_to_expire_date
 from urllib.parse import unquote
+import config
 
 class Nextcloud:
 
@@ -68,7 +69,7 @@ class Nextcloud:
         cache_time=datetime.datetime.now()-self.file_cache[0]
         print("Cache lifetime:",cache_time)
         
-        if cache_time.total_seconds() > 60*60*24:
+        if cache_time.total_seconds() > config.directory_cache_time:
             print("not using cache")
             self.file_cache = (datetime.datetime.now(),
                                self.get_dirs())
@@ -99,7 +100,7 @@ class Nextcloud:
                 if distance < accuracy or modified_lecture.lower() in modified_lecture_name_server.lower():
                     if distance <= 0:
                         distance = 1
-                    if lecture_name_server in self.link_cache and (datetime.datetime.now()-self.link_cache[str(lecture_name_server)][0]).total_seconds()<60*60*24:
+                    if lecture_name_server in self.link_cache and (datetime.datetime.now()-self.link_cache[str(lecture_name_server)][0]).total_seconds()<config.file_cache_time:
                         print("Using cached Link")
                         cache_counter += 1
                         output[lecture_name_server] =(self.link_cache[str(lecture_name_server)][1],1/float(math.sqrt(distance)))

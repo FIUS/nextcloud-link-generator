@@ -2,3 +2,5 @@ user = 'username'
 password = 'pw'
 url='url'
 base_dir='dir'
+directory_cache_time=60
+file_cache_time=60
