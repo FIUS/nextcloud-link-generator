@@ -10,6 +10,7 @@ from nextcloud import NextCloud
 from nextcloud.base import ShareType,Permission, datetime_to_expire_date
 from urllib.parse import unquote
 import nclink.config as config
+import threading
 
 class Nextcloud:
 
@@ -20,7 +21,7 @@ class Nextcloud:
         self.username=username
         self.remote_directory=remote_directory
         self.nc=NextCloud(domain,username,password,json_output=True)
-        
+        self.cache_thread_running=False
         self.remote_directory = remote_directory
         print("Filling cache...")
         self.file_cache = (datetime.datetime.now(),
@@ -64,28 +65,34 @@ class Nextcloud:
         return output_list[1:]
 
     def get_links(self, lectures, link_expire_in_days=7, accuracy=8, cache_callback=None, recursion=True):
+        try:
+            cache_time=datetime.datetime.now()-self.file_cache[0]
+            print("Cache lifetime:",cache_time)
+            
+            if cache_time.total_seconds() > config.directory_cache_time:
+                print("not using cache")
+                self.file_cache = (datetime.datetime.now(),
+                                self.get_dirs())
+            else:
+                print("using cache")
+            
+            if cache_callback is not None and recursion and not self.cache_thread_running:
+                if len(self.link_cache)==0 or (datetime.datetime.now()-self.link_cache[self.link_cache.keys()[0]][0]).total_seconds()>config.file_cache_time:
+                    self.cache_thread_running=True
+                    cache_callback("The cache is being recreated, your request is processed parallel")
+                    try:
+                        params=([""],link_expire_in_days,accuracy,cache_callback,False)
+                        threading._start_new_thread(self.get_links,params)
+                    except Exception as e:
+                        print(e)
+                    
 
-        cache_time=datetime.datetime.now()-self.file_cache[0]
-        print("Cache lifetime:",cache_time)
-        
-        if cache_time.total_seconds() > config.directory_cache_time:
-            print("not using cache")
-            self.file_cache = (datetime.datetime.now(),
-                               self.get_dirs())
-        else:
-            print("using cache")
-        
-        if cache_callback is not None and recursion:
-            if len(self.link_cache)==0 or (datetime.datetime.now()-self.link_cache[self.link_cache.keys()[0]][0]).total_seconds()>config.file_cache_time:
-                cache_callback("The cache has to be recreated, this may take a few minutes")
-                self.get_links([""],link_expire_in_days,accuracy,cache_callback=cache_callback,recursion=False)
-                cache_callback("The cache has been recreated, your request is now processed!")
+            files = self.file_cache[1]
 
-        files = self.file_cache[1]
-
-        cache_counter=0
-        fetch_counter=0
-
+            cache_counter=0
+            fetch_counter=0
+        except Exception as ex:
+            print(ex)
         print("Done...")
         output = {}
         for lecture in lectures:
@@ -112,7 +119,10 @@ class Nextcloud:
                         output[lecture_name_server] =(self.link_cache[str(lecture_name_server)][1],1/float(math.sqrt(distance)))
                         
                     else:
-                        print("Fetching link from server")
+                        if not recursion:
+                            print("Fetching link from server (cache thread)")
+                        if recursion:
+                            print("Fetching link from server (request)")
                         fetch_counter += 1
                         
                         link_info = self.link_from_server(f,expire_days=link_expire_in_days)
@@ -120,12 +130,14 @@ class Nextcloud:
                         
                         if not recursion:
                             percentage="{:.2f}".format((counter/len(files))*100)+"%"
-                            cache_callback("Caching progress: "+percentage)
+                            # cache_callback("Caching progress: "+percentage)
                             counter+=1
 
                         self.link_cache[str(lecture_name_server)]=(datetime.datetime.now(),link_info)
                         output[lecture_name_server] = (link_info, 1/float(math.sqrt(distance)))
-        
+        if not recursion:
+            self.cache_thread_running=False
+            cache_callback("The cache has been recreated!")
         return output,cache_counter,fetch_counter
 
 
