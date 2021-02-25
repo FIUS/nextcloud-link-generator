@@ -120,9 +120,9 @@ class Nextcloud:
                         
                     else:
                         if not recursion:
-                            print("Fetching link from server (cache thread)")
+                            print("Fetching link from server (cache thread) -> "+lecture_name_server)
                         if recursion:
-                            print("Fetching link from server (request)")
+                            print("Fetching link from server (request)-> "+lecture_name_server)
                         fetch_counter += 1
                         
                         link_info = self.link_from_server(f,expire_days=link_expire_in_days)
