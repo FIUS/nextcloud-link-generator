@@ -11,6 +11,7 @@ from nextcloud.base import ShareType,Permission, datetime_to_expire_date
 from urllib.parse import unquote
 import nclink.config as config
 import threading
+import traceback
 
 class Nextcloud:
 
@@ -77,7 +78,15 @@ class Nextcloud:
                 print("using cache")
             
             if cache_callback is not None and recursion and not self.cache_thread_running:
-                if len(self.link_cache)==0 or (datetime.datetime.now()-self.link_cache[self.link_cache.keys()[0]][0]).total_seconds()>config.file_cache_time:
+                
+                link_cache_emtpy = len(self.link_cache)==0
+                if not link_cache_emtpy:
+                    first_link_key=list(self.link_cache.keys())[0]
+                    first_link_time=self.link_cache[first_link_key][0]
+                    link_cached_time=(datetime.datetime.now()-first_link_time).total_seconds()
+                    cache_too_old=link_cached_time>config.file_cache_time
+
+                if link_cache_emtpy or cache_too_old:
                     self.cache_thread_running=True
                     cache_callback("The cache is being recreated, your request is processed parallel")
                     try:
@@ -85,14 +94,14 @@ class Nextcloud:
                         threading._start_new_thread(self.get_links,params)
                     except Exception as e:
                         print(e)
-                    
-
+                        
             files = self.file_cache[1]
 
             cache_counter=0
             fetch_counter=0
         except Exception as ex:
             print(ex)
+            traceback.print_exc() 
         print("Done...")
         output = {}
         for lecture in lectures:
